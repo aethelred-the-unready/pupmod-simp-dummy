@@ -15,14 +15,14 @@ name: Validation and Tests
 on:
   push: {}
   pull_request: {}
-    
-jobs:   
+
+jobs:
   validate:
     name: "Validations"
     runs-on: ubuntu-18.04
     env:
       PUPPET_VERSION: "~> 6"
-    steps:           
+    steps:
       - uses: actions/checkout@v2
       - name: "Install Ruby ${{matrix.puppet.ruby_version}}"
         uses: ruby/setup-ruby@v1  # ruby/setup-ruby@ec106b438a1ff6ff109590de34ddc62c540232e0
@@ -36,14 +36,14 @@ jobs:
     runs-on: ubuntu-18.04
     env:
       PUPPET_VERSION: "~> 6"
-    steps:           
+    steps:
       - uses: actions/checkout@v2
       - name: "Install Ruby ${{matrix.puppet.ruby_version}}"
         uses: ruby/setup-ruby@v1
         with:
           ruby-version: 2.5
           bundler-cache: true
-      - run: "bundle exec rake lint"        
+      - run: "bundle exec rake lint"
       - run: "bundle exec rake metadata_lint"
 
 
@@ -52,7 +52,7 @@ jobs:
     runs-on: ubuntu-18.04
     env:
       PUPPET_VERSION: "~> 6"
-    steps:           
+    steps:
       - uses: actions/checkout@v2
       - name: "Install Ruby ${{matrix.puppet.ruby_version}}"
         uses: ruby/setup-ruby@v1
@@ -68,7 +68,7 @@ jobs:
     runs-on: ubuntu-18.04
     env:
       PUPPET_VERSION: "~> 6"
-    steps:           
+    steps:
       - uses: actions/checkout@v2
       - name: "Install Ruby ${{matrix.puppet.ruby_version}}"
         uses: ruby/setup-ruby@v1
@@ -104,7 +104,7 @@ jobs:
             ruby_version: "2.7"
 
     env:
-      PUPPET_VERSION: "${{matrix.puppet.puppet_version}}"    
+      PUPPET_VERSION: "${{matrix.puppet.puppet_version}}"
     steps:
       - uses: actions/checkout@v2
       - name: "Install Ruby ${{matrix.puppet.ruby_version}}"
@@ -114,7 +114,7 @@ jobs:
           bundler-cache: true
       - run: "command -v rpm || if command -v apt-get; then apt-get update; apt-get install -y rpm; fi ||:"
       - run: "bundle exec rake spec"
-          
+
 
   trigger-acceptance:
     name: "Trigger GLCI Acceptance tests"
@@ -125,24 +125,41 @@ jobs:
         id: user-membership
         with:
           github-token: ${{secrets.GITHUB_TOKEN}}
+          # See:
+          #   - https://octokit.github.io/rest.js/
+          #   - https://docs.github.com/en/free-pro-team@latest/rest/reference/projects#get-project-permission-for-a-user
           script: |
-            // See: https://octokit.github.io/rest.js/
-            // See: https://docs.github.com/en/free-pro-team@latest/rest/reference/projects#get-project-permission-for-a-user
             const project_permission = await github.request('GET /repos/{owner}/{repo}/collaborators/{username}/permission', {
               owner: context.repo.owner,
               repo: context.repo.repo,
               username: context.payload.sender.login,
-              mediaType: {
-                previews: [
-                  'inertia'
-                ]
-              }
+              mediaType: { previews: [ 'inertia' ] }
             })
             const has_write_access = perm_lvl => (perm_lvl == "admin" || perm_lvl == "write" )
             const write_access_desc = perm_bool => (perm_bool ? "PERMISSION OK" : "PERMISSION DENIED" )
             console.log(`=== payload user '${context.payload.sender.login}' for '${context.repo.owner}': ${write_access_desc(has_write_access(project_permission.data.permission))}`)
             return(has_write_access(project_permission.data.permission))
-            
+
+      - uses: actions/github-script@v3
+        id: user-membership
+        with:
+          github-token: ${{secrets.GITHUB_TOKEN}}
+          # See:
+          #   - https://octokit.github.io/rest.js/
+          #   - https://docs.github.com/en/free-pro-team@latest/rest/reference/repos#get-repository-permissions-for-a-user
+          script: |
+            const project_permission = await github.request('GET /repos/{owner}/{repo}/collaborators/{username}/permission', {
+              headers: {
+                accept: 'application/vnd.github.v3+json'
+              },
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              username: context.payload.sender.login,
+            })
+            const has_write_access = perm_lvl => (perm_lvl == "admin" || perm_lvl == "write" )
+            const write_access_desc = perm_bool => (perm_bool ? "PERMISSION OK" : "PERMISSION DENIED" )
+            console.log(`=== payload user '${context.payload.sender.login}' for '${context.repo.owner}': ${write_access_desc(has_write_access(project_permission.data.permission))}`)
+            return(has_write_access(project_permission.data.permission))
       - name: Trigger Gitlab CI
         if: steps.user-membership.outputs.result == 'true'
         run: |
