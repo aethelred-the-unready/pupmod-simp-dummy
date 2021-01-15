@@ -116,8 +116,38 @@ jobs:
       - run: "bundle exec rake spec"
 
 
-  trigger-acceptance:
-    name: "Trigger GLCI Acceptance tests"
+  trigger-if-user-has-repo-permissions:
+    name: "Trigger if user has Repo Permissions"
+    needs: [validate, releng-checks, files, style, test]
+    runs-on: ubuntu-18.04
+    steps:
+      - uses: actions/github-script@v3
+        id: user-repo-permissions
+        with:
+          github-token: ${{secrets.GITHUB_TOKEN}}
+          # See:
+          #   - https://octokit.github.io/rest.js/
+          #   - https://docs.github.com/en/free-pro-team@latest/rest/reference/repos#get-repository-permissions-for-a-user
+          script: |
+            const project_permission = await github.request('GET /repos/{owner}/{repo}/collaborators/{username}/permission', {
+              headers: {
+                accept: 'application/vnd.github.v3+json'
+              },
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              username: context.payload.sender.login,
+            })
+            const has_write_access = perm_lvl => (perm_lvl == "admin" || perm_lvl == "write" )
+            const write_access_desc = perm_bool => (perm_bool ? "PERMISSION OK" : "PERMISSION DENIED" )
+            console.log(`=== payload user '${context.payload.sender.login}' for '${context.repo.owner}': ${write_access_desc(has_write_access(project_permission.data.permission))}`)
+            return(has_write_access(project_permission.data.permission))
+      - name: Trigger if user has Repo Permissions
+        if: steps.user-repo-permissions.outputs.result == 'true'
+        run: |
+           echo "GOOD User Belongs to org ${GITHUB_REPOSITORY_OWNER}; I'd have triggered a remote PR check here"
+
+  trigger-if-user-has-project-permissions:
+    name: "Trigger if user has Project Permissions"
     needs: [validate, releng-checks, files, style, test]
     runs-on: ubuntu-18.04
     steps:
@@ -140,31 +170,7 @@ jobs:
             console.log(`=== payload user '${context.payload.sender.login}' for '${context.repo.owner}': ${write_access_desc(has_write_access(project_permission.data.permission))}`)
             return(has_write_access(project_permission.data.permission))
 
-      - uses: actions/github-script@v3
-        id: user-repo-permissions
-        with:
-          github-token: ${{secrets.GITHUB_TOKEN}}
-          # See:
-          #   - https://octokit.github.io/rest.js/
-          #   - https://docs.github.com/en/free-pro-team@latest/rest/reference/repos#get-repository-permissions-for-a-user
-          script: |
-            const project_permission = await github.request('GET /repos/{owner}/{repo}/collaborators/{username}/permission', {
-              headers: {
-                accept: 'application/vnd.github.v3+json'
-              },
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              username: context.payload.sender.login,
-            })
-            const has_write_access = perm_lvl => (perm_lvl == "admin" || perm_lvl == "write" )
-            const write_access_desc = perm_bool => (perm_bool ? "PERMISSION OK" : "PERMISSION DENIED" )
-            console.log(`=== payload user '${context.payload.sender.login}' for '${context.repo.owner}': ${write_access_desc(has_write_access(project_permission.data.permission))}`)
-            return(has_write_access(project_permission.data.permission))
       - name: Trigger if user has Project Permissions
         if: steps.user-project-permissions.outputs.result == 'true'
-        run: |
-           echo "GOOD User Belongs to org ${GITHUB_REPOSITORY_OWNER}; I'd have triggered a remote PR check here"
-      - name: Trigger if user has Repo Permissions
-        if: steps.user-repo-permissions.outputs.result == 'true'
         run: |
            echo "GOOD User Belongs to org ${GITHUB_REPOSITORY_OWNER}; I'd have triggered a remote PR check here"
