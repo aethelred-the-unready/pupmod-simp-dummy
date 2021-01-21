@@ -278,6 +278,8 @@ jobs:
       # - [ ] if PR: force-push branch to GitLab
       - uses: actions/checkout@v2
         if: steps.user-repo-permissions.outputs.result == 'true'
+        with:
+          fetch-depth: 3
       - name: Trigger when user has Repo Permissions
         if: steps.user-repo-permissions.outputs.result == 'true'
         env:
