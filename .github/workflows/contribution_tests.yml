@@ -234,13 +234,13 @@ jobs:
     #
     #
     # Trigger on:
-    # - [ ] New PR
-    #       github.event_name == 'pull_request' && github.event.action == 'opened'
-    # - [ ] Add commit to PR
-    #       github.event_name == 'pull_request' && github.event.action == 'synchronize'
+    # - [x] New PR
+    #       startsWith( github.event_name, 'pull_request' ) && github.event.action == 'opened'
+    # - [x] Add commit to PR
+    #       startsWith( github.event_name, 'pull_request' ) && github.event.action == 'synchronize'
     #
     # Do NOT Trigger on:
-    # - [ ] Merged PR (the mirror will do this)
+    # - [x] Merged PR (the mirror will do this)
     #       github.event.pull_request.merged == false
     #       github.event.pull_request.merged == 'false'
     if: startsWith( github.event_name, 'pull_request' ) && ( github.event.action == 'opened' || github.event.action == 'synchronize' )
@@ -279,7 +279,7 @@ jobs:
       - uses: actions/checkout@v2
         if: steps.user-repo-permissions.outputs.result == 'true'
         with:
-          fetch-depth: 2
+          fetch-depth: 3
       - name: Trigger when user has Repo Permissions
         if: steps.user-repo-permissions.outputs.result == 'true'
         env:
