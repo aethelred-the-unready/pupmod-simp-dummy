@@ -32,7 +32,7 @@ on:
   #
   # This might confuse folks when submitting a PR to update the workflow itself
   pull_request_target:
-    types: [opened, reopened, synchronized]
+    types: [opened, reopened, synchronized, synchronize]
 
 env:
   GITLAB_SERVER_URL: ${{ secrets.GITLAB_SERVER_URL }} # https://gitlab.com
