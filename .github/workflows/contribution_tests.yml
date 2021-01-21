@@ -230,7 +230,7 @@ jobs:
   trigger-e:
     name: Trigger PR (opened or synchronize + stache)
     runs-on: ubuntu-16.04
-    if: startsWith( github.event_name, 'pull_request' ) &&  (github.event.action == 'opened' || github.event.action == 'synchronize') }}
+    if: startsWith( github.event_name, 'pull_request' ) &&  (github.event.action == 'opened' || github.event.action == 'synchronize')
     steps:
       - run: echo x
 
