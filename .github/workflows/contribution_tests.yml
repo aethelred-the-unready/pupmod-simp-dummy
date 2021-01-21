@@ -31,8 +31,9 @@ on:
   # commit, not the PR Head.
   #
   # This might confuse folks when submitting a PR to update the workflow itself
-  pull_request_target:
-    types: [opened, reopened, synchronize]
+  - pull_request_target
+#  pull_request_target:
+#    types: [opened, reopened, synchronize]
 
 env:
   GITLAB_SERVER_URL: ${{ secrets.GITLAB_SERVER_URL }} # https://gitlab.com
