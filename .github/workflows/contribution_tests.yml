@@ -32,7 +32,7 @@ on:
   #
   # This might confuse folks when submitting a PR to update the workflow itself
   pull_request_target:
-    types: [opened, reopened, synchronized, synchronize]
+    types: [opened, reopened, synchronize]
 
 env:
   GITLAB_SERVER_URL: ${{ secrets.GITLAB_SERVER_URL }} # https://gitlab.com
@@ -208,28 +208,28 @@ jobs:
   trigger-b:
     name: Trigger PR (opened)
     runs-on: ubuntu-16.04
-    if: github.event_name == 'pull_request' && github.event.action == 'opened'
+    if: startsWith( github.event_name, 'pull_request' ) && github.event.action == 'opened'
     steps:
       - run: echo x
 
   trigger-c:
     name: Trigger PR (synchronize)
     runs-on: ubuntu-16.04
-    if: github.event_name == 'pull_request' && github.event.action == 'synchronize'
+    if: startsWith( github.event_name, 'pull_request' ) && github.event.action == 'synchronize'
     steps:
       - run: echo x
 
   trigger-d:
     name: Trigger PR (opened or synchronize)
     runs-on: ubuntu-16.04
-    if: github.event_name == 'pull_request' && (github.event.action == 'opened' || github.event.action == 'synchronize')
+    if: startsWith( github.event_name, 'pull_request' ) && (github.event.action == 'opened' || github.event.action == 'synchronize')
     steps:
       - run: echo x
 
   trigger-e:
     name: Trigger PR (opened or synchronize + stache)
     runs-on: ubuntu-16.04
-    if: ${{ github.event_name == 'pull_request' && (github.event.action == 'opened' || github.event.action == 'synchronize') }}
+    if: startsWith( github.event_name, 'pull_request' ) &&  (github.event.action == 'opened' || github.event.action == 'synchronize') }}
     steps:
       - run: echo x
 
@@ -248,7 +248,7 @@ jobs:
     # - [ ] Merged PR (the mirror will do this)
     #       github.event.pull_request.merged == false
     #       github.event.pull_request.merged == 'false'
-    if: ${{ github.event_name == 'pull_request' && ( github.event.action == 'opened' || github.event.action == 'synchronize' ) }}
+    if: startsWith( github.event_name, 'pull_request' ) && ( github.event.action == 'opened' || github.event.action == 'synchronize' )
     continue-on-error: true
     needs: [puppet-syntax, glci-syntax, file-checks, puppet-style, spec-tests]
     runs-on: ubuntu-18.04
