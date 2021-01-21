@@ -184,6 +184,27 @@ jobs:
     steps:
       - run: echo x
 
+  trigger-ba:
+    name: Trigger (action == opened)
+    runs-on: ubuntu-16.04
+    if: github.event.action == 'opened'
+    steps:
+      - run: echo x
+
+  trigger-ca:
+    name: Trigger (action == synchronize)
+    runs-on: ubuntu-16.04
+    if: github.event.action == 'synchronize'
+    steps:
+      - run: echo x
+
+  trigger-da:
+    name: Trigger (action == opened or synchronize)
+    runs-on: ubuntu-16.04
+    if: github.event.action == 'opened' || github.event.action == 'synchronize'
+    steps:
+      - run: echo x
+
   trigger-b:
     name: Trigger PR (opened)
     runs-on: ubuntu-16.04
